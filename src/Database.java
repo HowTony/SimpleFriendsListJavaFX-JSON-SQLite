@@ -1,8 +1,7 @@
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 
-import java.io.*;
-import java.util.ArrayList;
+import java.io.IOException;
 import java.util.List;
 
 /**
@@ -11,58 +10,23 @@ import java.util.List;
 public class Database {
 
     private List<Friend> mFriends;
+    private QueryData mQueriedData;
 
     public Database() {
-        mFriends = new ArrayList<>();
+        mQueriedData = new QueryData();
+        mFriends = mQueriedData.getLoadedList();
     }
 
     public void addToList(Friend friend) {
-        if (!friendInList(friend.getName())) {
+        if (!friendInList(friend)) {
             mFriends.add(friend);
         }
     }
 
     public void removeFromList(Friend friend) {
-        if (!friendInList(friend.getName())) {
+        if (friendInList(friend)) {
             mFriends.remove(friend);
         }
-    }
-
-    public void saveFriendsToDisk() throws IOException {
-        printFriends();
-        System.out.println("----------------------------------------------");
-        try {
-            FileWriter fileOut = new FileWriter(new File("d:/friend.txt"));
-            for (Friend friend: mFriends) {
-                fileOut.write(friend.getName() + ", " + friend.getLocation());
-                fileOut.write(System.getProperty("line.separator"));
-            }
-            fileOut.close();
-        } catch (IOException i) {
-            i.printStackTrace();
-        }
-        //printFriends();
-    }
-
-    public void loadFriendsFromFile() {
-        try {
-            FileReader fileIn = new FileReader("d:/friend.txt");
-            BufferedReader bf = new BufferedReader(fileIn);
-            while(bf.ready()) {
-                String friend = bf.readLine();
-                String[] friendToSplit = friend.split(", ", 2);
-                String name = friendToSplit[0];
-                String location = friendToSplit[1];
-                Friend currentFriend = new Friend(name, location);
-                addToList(currentFriend);
-            }
-            bf.close();
-            fileIn.close();
-        } catch (IOException i) {
-            i.printStackTrace();
-            return;
-        }
-        printFriends();
     }
 
     private void printFriends() {
@@ -77,13 +41,36 @@ public class Database {
         return friends;
     }
 
-    private boolean friendInList(String friendName){
+    private boolean friendInList(Friend friendName){
         boolean bool = false;
         for (Friend friend: mFriends) {
-            if(friendName == friend.getName()){
+            if(friendName.getName().equalsIgnoreCase((friend.getName()))){
                 bool = true;
             }
         }
         return bool;
     }
+
+    public QueryData getQueriedData(){
+        return mQueriedData;
+    }
+
+    public void saveFriendsToDisk() {
+        try {
+            mQueriedData.saveFriendsToDisk(mFriends);
+        }catch (IOException i){
+            i.printStackTrace();
+        }
+    }
+
+    public void editFriend(Friend editedFriend, Friend friendToEdit){
+        if(!friendInList(editedFriend)) {
+            mFriends.set(mFriends.indexOf(friendToEdit), editedFriend);
+        }else{
+            mFriends.set(mFriends.indexOf(friendToEdit), new Friend( friendToEdit.getName(), editedFriend.getLocation()));
+        }
+    }
+
+
+
 }

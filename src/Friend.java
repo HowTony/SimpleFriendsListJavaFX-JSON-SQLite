@@ -1,27 +1,16 @@
-
 /**
  * Created by Tony Howarth on 2/24/2017.
  */
-public class Friend {
-
+public class Friend{
     private String mName;
     private String mLocation;
     private String mBio;
 
-//    public Friend(String name){
-//        mName = name;
-//    }
     public Friend(String name, String location){
-        mName = name;
-        mLocation = location;
+        this.mName = name;
+       this.mLocation = location;
+       mBio = "";
     }
-
-//    public Friend(String name, String location, String bio){
-//        mName = name;
-//        mLocation = location;
-//        mBio = bio;
-//    }
-
     public String getName() {
         return mName;
     }
@@ -30,19 +19,15 @@ public class Friend {
         return mLocation;
     }
 
-    public String getmBio() {
-        return mBio;
-    }
-
-    public void setmName(String mName) {
+    public void setName(String mName) {
         this.mName = mName;
     }
 
-    public void setmLocation(String mLocation) {
+    public void setLocation(String mLocation) {
         this.mLocation = mLocation;
     }
 
-    public void setmBio(String mBio) {
+    public void setBio(String mBio) {
         this.mBio = mBio;
     }
 
