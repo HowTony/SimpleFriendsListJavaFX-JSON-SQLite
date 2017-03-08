@@ -4,6 +4,7 @@ import com.google.gson.stream.JsonReader;
 
 
 import java.io.*;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -12,32 +13,47 @@ import java.util.List;
  */
 public class QueryData {
 
-    private List<Friend>mFriends;
+    private List<Person> mPeople;
     private final String SAVE_FILE = "d:/friends.json";
+    private SQLiteManager mSQLManager;
 
-    public QueryData(){
-        mFriends = new ArrayList<>();
-        loadFriendsFromFile();
-
+    public QueryData() throws SQLException, ClassNotFoundException {
+        mPeople = new ArrayList<>();
+        mSQLManager = new SQLiteManager();
+        //loadFriendsFromFile();
+        loadFriendsFromDataBase();
     }
 
-    public List<Friend> getLoadedList(){
-        return mFriends;
+    public List<Person> getLoadedList(){
+        return mPeople;
     }
 
     /**
-     * Saves copy of friends list in JSON format with pretty printing enabled to save file location
-     * @param friends
+     * Saves copy of people list in JSON format with pretty printing enabled to save file location
+     * @param people
      * @throws IOException
      */
-    public void saveFriendsToDisk(List<Friend> friends) throws IOException {
+    public void saveFriendsToDisk(List<Person> people) throws IOException {
             try (Writer writer = new FileWriter(SAVE_FILE)) {
                 Gson gson = new GsonBuilder().setPrettyPrinting().create();
-                gson.toJson(friends, writer);
+                gson.toJson(people, writer);
             }catch (IOException e){
                 e.printStackTrace();
             }
     }
+
+    public void saveFriendsToDataBase(List<Person>people) throws SQLException, ClassNotFoundException {
+        for(Person eachPerson: people) {
+            if (!mSQLManager.userIDInDB(eachPerson.getID())){
+                mSQLManager.addUser(eachPerson.getFirstName(), eachPerson.getLastName(), eachPerson.getLocation());
+            }
+        }
+    }
+
+    public void loadFriendsFromDataBase() throws SQLException, ClassNotFoundException {
+       mPeople =  mSQLManager.loadUsersToMemory();
+    }
+
 
     public void loadFriendsFromFile() {
         try {
@@ -47,9 +63,9 @@ public class QueryData {
                     .create();
             reader.beginArray();
             while (reader.hasNext()) {
-                Friend friend = gson.fromJson(reader, Friend.class);
-                    if(!friendInList(friend.getName())) {
-                        mFriends.add(friend);
+                Person person = gson.fromJson(reader, Person.class);
+                    if(!friendInList(person.getName())) {
+                        mPeople.add(person);
                     }
             }
             reader.close();
@@ -65,11 +81,19 @@ public class QueryData {
     private boolean friendInList(String friendName){
         boolean bool = false;
         System.out.println(friendName.length());
-        for (Friend friend: mFriends) {
-            if(friendName.equalsIgnoreCase(friend.getName()) || friendName.length() < 2){
+        for (Person person : mPeople) {
+            if(friendName.equalsIgnoreCase(person.getName()) || friendName.length() < 2){
                 bool = true;
             }
         }
         return bool;
+    }
+
+    public void removeFromDB(int userID) throws SQLException, ClassNotFoundException {
+        mSQLManager.removeUser(userID);
+    }
+
+    public void editUserInDB(Person person) throws SQLException, ClassNotFoundException {
+        mSQLManager.editUser(person);
     }
 }
