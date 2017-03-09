@@ -1,4 +1,5 @@
 import javafx.application.Application;
+import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
 import javafx.scene.Group;
@@ -6,7 +7,7 @@ import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.HBox;
-import javafx.scene.layout.StackPane;
+import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
@@ -31,10 +32,16 @@ public class Main extends Application{
     private TextField mNameInput, mLocationInput;
     private Group mRoot;
     private Person mSelectedPerson;
+    private Stage mPrimaryStage;
+    private Button mExtendView;
     private boolean GSON_ACTIVE = false;
+    TableView<Person> mFriends;
+    VBox mVBox;
+    Pane mPane;
 
     @Override
     public void start(Stage primaryStage){
+        mPrimaryStage = primaryStage;
         mRoot = new Group();
         mTable.setEditable(true);
 
@@ -44,16 +51,16 @@ public class Main extends Application{
         mObsList = mData.getFriends();
 
         Scene scene = new Scene(mRoot);
-        primaryStage.setWidth(475);
+        primaryStage.setWidth(510);
         primaryStage.setHeight(500);
 
         TableColumn<Person, String> firstNameCol = new TableColumn("Name");
         firstNameCol.setCellValueFactory(new PropertyValueFactory("name"));
-        firstNameCol.setMinWidth(primaryStage.getWidth() / 2.2);
+        firstNameCol.setPrefWidth(primaryStage.getWidth() / 2.5);
 
         TableColumn<Person, String> locationCol = new TableColumn("Location");
         locationCol.setCellValueFactory(new PropertyValueFactory("location"));
-        locationCol.setMinWidth(primaryStage.getWidth() / 2.2);
+        locationCol.setPrefWidth(primaryStage.getWidth() / 2.5);
 
         mTable.setItems(mObsList);
         mTable.getColumns().addAll(firstNameCol, locationCol);
@@ -63,14 +70,40 @@ public class Main extends Application{
         row.setOnMouseClicked(event -> {
             if (event.getClickCount() == 1 && (!row.isEmpty())) {
                 mSelectedPerson = row.getItem();
+
+
             }else if(event.getClickCount() == 2 && (!row.isEmpty())){
-                StackPane pane = new StackPane();
-                Scene scene1 = new Scene(pane);
-                Stage stage = new Stage();
-                stage.setScene(scene1);
-                pane.getChildren().add(
-                        new TextField(mSelectedPerson.getFirstName()));
-                stage.show();
+                mFriends = new TableView<>();
+                TableColumn<Person, String> friendNameCol = new TableColumn<>("Possible Friends");
+                friendNameCol.setCellValueFactory(new PropertyValueFactory("name"));
+                friendNameCol.setPrefWidth(250);
+                ObservableList<Person> possibleFriends = FXCollections.observableArrayList(mObsList);
+                possibleFriends.remove(mSelectedPerson);
+                Button addFriend = new Button("Add Friend");
+                addFriend.setOnAction(eventAdd -> {
+
+                        addFriendClicked();
+
+                });
+                Button viewFriends = new Button("View Friends");
+                addFriend.setOnAction(eventAdd -> {
+
+                    viewFriendClicked();
+
+                });
+
+
+
+                mFriends.setLayoutY(mTable.getLayoutY());
+                mFriends.setLayoutX(mTable.getLayoutX() + 475);
+                addFriend.setLayoutX(mFriends.getLayoutX() + (475 / 1.8));
+                addFriend.setLayoutY(10);
+                mFriends.setItems(possibleFriends);
+                mFriends.getColumns().addAll(friendNameCol);
+                mPane.getChildren().addAll(mFriends, addFriend);
+
+
+
             }
         });
         return row;
@@ -118,18 +151,53 @@ public class Main extends Application{
             }
         });
 
+
+        mExtendView = new Button(">>");
+        mExtendView.setOnAction(event -> adjustMainView());
+        mPane = new Pane();
+        mExtendView.setScaleX(.5);
+        mExtendView.setScaleY(.8);
+        mExtendView.setLayoutX(444);
+        mExtendView.setLayoutY(8);
+        mPane.getChildren().add(mExtendView);
+
         mBox.getChildren().addAll( mNameInput, mLocationInput, addButton, editButton, deleteButton);
         mBox.setSpacing(3);
 
-        VBox vbox = new VBox();
-        vbox.setSpacing(10);
-        vbox.setPadding(new Insets(10, 10, 10, 10));
-        vbox.getChildren().addAll(mTable, mBox);
+        mVBox = new VBox();
+        mVBox.setSpacing(10);
+        mVBox.setPadding(new Insets(10, 10, 10, 10));
+        mVBox.getChildren().addAll(mTable, mBox);
 
-        ((Group) scene.getRoot()).getChildren().addAll(vbox);
+        ((Group) scene.getRoot()).getChildren().addAll(mVBox, mPane);
 
-        primaryStage.setScene(scene);
-        primaryStage.show();
+        mPrimaryStage.setScene(scene);
+        mPrimaryStage.show();
+    }
+
+    private void viewFriendClicked() {
+    }
+
+    private void addFriendClicked() {
+    }
+
+    private void adjustMainView() {
+        if(!isViewLargest()){
+            mPrimaryStage.setWidth(900);
+            mExtendView.setText("<<");
+        }else{
+            mPrimaryStage.setWidth(510);
+            mExtendView.setText(">>");
+            mSelectedPerson = null;
+            mPane.getChildren().remove(mFriends);
+        }
+    }
+
+    private boolean isViewLargest(){
+        if(mPrimaryStage.getWidth() >= 900){
+            return true;
+        }
+        return false;
     }
 
     private void deleteClicked() throws SQLException, ClassNotFoundException {
