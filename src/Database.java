@@ -46,7 +46,7 @@ public class Database {
     private boolean friendInList(Person personName){
         boolean bool = false;
         for (Person person : mPeople) {
-            if(personName.getName().equalsIgnoreCase((person.getName()))){
+            if(personName.getName().equalsIgnoreCase((person.getLocation()))){
                 bool = true;
             }
         }
@@ -66,12 +66,11 @@ public class Database {
             mPeople.set(mPeople.indexOf(personToEdit), editedPerson);
             mQueriedData.editUserInDB(editedPerson);
         }else{
-            Person somePerson = new Person( editedPerson.getFirstName(), editedPerson.getLastName(), editedPerson.getLocation(), editedPerson.getID());
+            Person somePerson = new Person( editedPerson.getFirstName(), editedPerson.getLastName(), editedPerson.getLocation());
             mPeople.set(mPeople.indexOf(personToEdit), somePerson);
             mQueriedData.editUserInDB(somePerson);
         }
     }
-
 
 
 }

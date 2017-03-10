@@ -44,8 +44,8 @@ public class QueryData {
 
     public void saveFriendsToDataBase(List<Person>people) throws SQLException, ClassNotFoundException {
         for(Person eachPerson: people) {
-            if (!mSQLManager.userIDInDB(eachPerson.getID())){
-                mSQLManager.addUser(eachPerson.getFirstName(), eachPerson.getLastName(), eachPerson.getLocation());
+            if (!mSQLManager.userIDInDB(eachPerson.getLocation())){
+                mSQLManager.addUser(eachPerson);
             }
         }
     }
@@ -95,5 +95,9 @@ public class QueryData {
 
     public void editUserInDB(Person person) throws SQLException, ClassNotFoundException {
         mSQLManager.editUser(person);
+    }
+
+    public SQLiteManager getmSQLManager() {
+        return mSQLManager;
     }
 }

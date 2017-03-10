@@ -52,8 +52,6 @@ public class SQLiteManager {
                     res.getString("lastName"),
                     res.getString("address"),
                     res.getInt("userID")));
-
-
         }
 
         return peopleInMemory;
@@ -84,15 +82,16 @@ public class SQLiteManager {
         prep.execute();
     }
 
-    public void addUser(String firstName, String lastName, String address) throws SQLException, ClassNotFoundException {
+    public void addUser(Person person) throws SQLException, ClassNotFoundException {
         if(mCon == null){
             getConnection();
         }
         PreparedStatement prep = mCon.prepareStatement("INSERT INTO users VALUES(?, ?, ?, ?);");
-        prep.setString(2, firstName);
-        prep.setString(3, lastName);
-        prep.setString(4, address);
+        prep.setString(2, person.getFirstName());
+        prep.setString(3, person.getLastName());
+        prep.setString(4, person.getLocation());
         prep.execute();
+        person.setID(getUserID(person.getLocation()));
     }
 
     public void addFriends(int userID, int friendID) throws SQLException, ClassNotFoundException {
@@ -134,14 +133,24 @@ public class SQLiteManager {
         }
     }
 
-    public boolean userIDInDB(int userID) throws SQLException, ClassNotFoundException {
+    public int getUserID(String address) throws SQLException, ClassNotFoundException {
+        int id = 0;
         if (mCon == null) {
             getConnection();
         }
         Statement state = mCon.createStatement();
-        ResultSet res = state.executeQuery("SELECT * FROM users WHERE userID == " + userID);
+        ResultSet res = state.executeQuery("SELECT * FROM users WHERE address = '" + address + "'");
+        return res.getInt("userID");
+    }
+
+    public boolean userIDInDB(String address) throws SQLException, ClassNotFoundException {
+        if (mCon == null) {
+            getConnection();
+        }
+        Statement state = mCon.createStatement();
+        ResultSet res = state.executeQuery("SELECT * FROM users WHERE address = '" + address + "'");
         while(res.next()) {
-            if (res.getInt("userID") == userID) {
+            if (res.getString("address").equalsIgnoreCase(address)) {
                 return true;
             }
         }
@@ -173,11 +182,11 @@ public class SQLiteManager {
         prep.setString(1, person.getFirstName());
         prep.setString(2, person.getLastName());
         prep.setString(3, person.getLocation());
-
         prep.executeUpdate();
     }
 
     public void removeFriend(){
 
     }
+
 }
