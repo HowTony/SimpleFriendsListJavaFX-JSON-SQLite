@@ -8,12 +8,6 @@ public class Person {
     private String mBio;
     private int mID;
 
-    public Person(String name, String location){
-        this.mFirstName = name;
-       this.mLocation = location;
-       mBio = "";
-    }
-
     public Person(String firstName, String lastName, String location){
         this.mFirstName = firstName;
         this.mLastName = lastName;
@@ -29,25 +23,12 @@ public class Person {
         mBio = "";
     }
 
-
     public String getFirstName() {
         return mFirstName;
     }
 
     public String getLocation() {
         return mLocation;
-    }
-
-    public void setName(String mName) {
-        this.mFirstName = mName;
-    }
-
-    public void setLocation(String mLocation) {
-        this.mLocation = mLocation;
-    }
-
-    public void setBio(String mBio) {
-        this.mBio = mBio;
     }
 
     public void setID(int id){
@@ -57,16 +38,13 @@ public class Person {
     public String getName(){
         return mFirstName + " " + mLastName;
     }
+
     public String getLastName(){
         return mLastName;
     }
 
     public int getID(){
         return mID;
-    }
-
-    public String getIDString(){
-        return Integer.toString(mID);
     }
 
     @Override

@@ -1,7 +1,5 @@
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-
-import java.io.IOException;
 import java.sql.SQLException;
 import java.util.List;
 
@@ -15,7 +13,7 @@ public class Database {
 
     public Database() throws SQLException, ClassNotFoundException {
         mQueriedData = new QueryData();
-        mPeople = mQueriedData.getLoadedList();
+        mPeople = mQueriedData.loadFriendsFromDataBase();
     }
 
     public void addToList(Person person) {
@@ -31,13 +29,7 @@ public class Database {
         }
     }
 
-    private void printFriends() {
-        for (Person person : mPeople) {
-            System.out.println(person);
-        }
-    }
-
-    public ObservableList<Person> getFriends() {
+    public ObservableList<Person> getFriendsInObservableList() {
         ObservableList<Person> people = FXCollections.observableArrayList();
         people.addAll(mPeople);
         return people;
@@ -46,7 +38,7 @@ public class Database {
     private boolean friendInList(Person personName){
         boolean bool = false;
         for (Person person : mPeople) {
-            if(personName.getName().equalsIgnoreCase((person.getLocation()))){
+            if(personName.getLocation().equalsIgnoreCase((person.getLocation()))){
                 bool = true;
             }
         }
@@ -72,5 +64,12 @@ public class Database {
         }
     }
 
-
+    public Person getPerson(int userID){
+        for(Person eachPerson: mPeople){
+            if(eachPerson.getID() == userID){
+                return eachPerson;
+            }
+        }
+        return null;
+    }
 }

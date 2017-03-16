@@ -1,11 +1,12 @@
+import java.io.File;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
-
 /**
  * Created by Tony Howarth on 3/3/2017.
  */
+
 public class SQLiteManager {
 
     private static Connection mCon;
@@ -20,24 +21,25 @@ public class SQLiteManager {
             getConnection();
         }
         Statement stmt = mCon.createStatement();
-            String sql = "CREATE TABLE IF NOT EXISTS users " +
+            String usersTable = "CREATE TABLE IF NOT EXISTS users " +
                     "(userID INTEGER PRIMARY KEY AUTOINCREMENT        NOT NULL," +
                     " firstName           TEXT    NOT NULL, " +
                     " lastName           TEXT    NOT NULL, " +
                     " address        CHAR(50))";
 
-            String sql2 = "CREATE TABLE IF NOT EXISTS friends " +
-                    "(userID INT        NOT NULL," +
+            String friendsTable = "CREATE TABLE IF NOT EXISTS friends " +
+                    "(userID INT        NOT NULL, " +
                     "friendID INT      NOT NULL)";
 
-            stmt.executeUpdate(sql);
-            stmt.executeUpdate(sql2);
+            stmt.executeUpdate(usersTable);
+            stmt.executeUpdate(friendsTable);
             stmt.close();
     }
 
     private void getConnection() throws ClassNotFoundException, SQLException {
         Class.forName("org.sqlite.JDBC");
-        mCon = DriverManager.getConnection("jdbc:sqlite:users.db");
+        File temp = new File("tmp/users.db");
+        mCon = DriverManager.getConnection("jdbc:sqlite:" + temp.getAbsolutePath());
     }
 
     public List<Person> loadUsersToMemory() throws SQLException, ClassNotFoundException {
@@ -53,33 +55,7 @@ public class SQLiteManager {
                     res.getString("address"),
                     res.getInt("userID")));
         }
-
         return peopleInMemory;
-    }
-
-    public void displayUsers() throws SQLException, ClassNotFoundException {
-        if (mCon == null) {
-            getConnection();
-        }
-        Statement state = mCon.createStatement();
-        ResultSet res = state.executeQuery("SELECT * FROM users");
-        while(res.next()){
-
-            System.out.println(res.getInt("userid") +  "\t" +
-                    res.getString("firstname") + "\t" +
-                    res.getString("lastname"));
-
-        }
-    }
-
-    public void addUser(String firstName, String lastName) throws SQLException, ClassNotFoundException {
-        if(mCon == null){
-            getConnection();
-        }
-        PreparedStatement prep = mCon.prepareStatement("INSERT INTO users VALUES(?, ?, ?);");
-        prep.setString(2, firstName);
-        prep.setString(3, lastName);
-        prep.execute();
     }
 
     public void addUser(Person person) throws SQLException, ClassNotFoundException {
@@ -91,41 +67,15 @@ public class SQLiteManager {
         prep.setString(3, person.getLastName());
         prep.setString(4, person.getLocation());
         prep.execute();
-        person.setID(getUserID(person.getLocation()));
+        person.setID(getUserIDFromAddress(person.getLocation()));
     }
 
-    public void addFriends(int userID, int friendID) throws SQLException, ClassNotFoundException {
-        if(mCon == null){
-            getConnection();
-        }
-        PreparedStatement prep = mCon.prepareStatement("INSERT INTO friends VALUES(?, ?)");
-        prep.setInt(1, userID);
-        prep.setInt(2, friendID);
-        PreparedStatement prep2 = mCon.prepareStatement("INSERT INTO friends VALUES(?, ?)");
-        prep2.setInt(1, friendID);
-        prep2.setInt(2, userID);
-        prep.execute();
-        prep2.execute();
-    }
-
-    public void getFriends(int userID) throws SQLException, ClassNotFoundException {
-        if(mCon == null){
-            getConnection();
-        }
-        Statement stmt = mCon.createStatement();
-        String sql = "SELECT * FROM FRIENDS WHERE " + "userID == " + userID;
-        ResultSet res = stmt.executeQuery(sql);
-        while(res.next()) {
-            System.out.println(res.getString(2));
-        }
-    }
-
-    public void getUserData(int userID) throws SQLException, ClassNotFoundException {
+    public void getUserWithID(int userID) throws SQLException, ClassNotFoundException {
         if (mCon == null) {
             getConnection();
         }
         Statement state = mCon.createStatement();
-        ResultSet res = state.executeQuery("SELECT * FROM users WHERE userID == " + userID);
+        ResultSet res = state.executeQuery("SELECT FROM users WHERE userID == " + userID);
         while(res.next()){
             System.out.println(res.getInt("userid") +  "\t" +
                     res.getString("firstname") + "\t" +
@@ -133,13 +83,12 @@ public class SQLiteManager {
         }
     }
 
-    public int getUserID(String address) throws SQLException, ClassNotFoundException {
-        int id = 0;
+    public int getUserIDFromAddress(String address) throws SQLException, ClassNotFoundException {
         if (mCon == null) {
             getConnection();
         }
         Statement state = mCon.createStatement();
-        ResultSet res = state.executeQuery("SELECT * FROM users WHERE address = '" + address + "'");
+        ResultSet res = state.executeQuery("SELECT userID FROM users WHERE address = '" + address + "'");
         return res.getInt("userID");
     }
 
@@ -163,7 +112,6 @@ public class SQLiteManager {
         }
         Statement state = mCon.createStatement();
         state.executeUpdate("DELETE FROM users WHERE userID = " + userID);
-
     }
 
     public void editUser(Person person) throws SQLException, ClassNotFoundException{
@@ -185,8 +133,40 @@ public class SQLiteManager {
         prep.executeUpdate();
     }
 
-    public void removeFriend(){
-
+    public void addFriends(int userID, int friendID) throws SQLException, ClassNotFoundException {
+        if(mCon == null){
+            getConnection();
+        }
+        PreparedStatement prep = mCon.prepareStatement("INSERT INTO friends VALUES(?, ?)");
+        prep.setInt(1, userID);
+        prep.setInt(2, friendID);
+        prep.execute();
+        prep.setInt(1, friendID);
+        prep.setInt(2, userID);
+        prep.execute();
     }
 
+    public void removeFriend(int mainUser, int userFriend) throws SQLException, ClassNotFoundException {
+        if (mCon == null) {
+            getConnection();
+        }
+        Statement state = mCon.createStatement();
+        state.executeUpdate("DELETE FROM friends WHERE userID = '" + mainUser + "' AND friendID = '" + userFriend + "'");
+        state.executeUpdate("DELETE FROM friends WHERE userID = '" + userFriend + "' AND friendID = '" + mainUser + "'");
+    }
+
+    public List<Integer> getFriends(int userID) throws SQLException, ClassNotFoundException {
+        List<Integer> friendIDs = new ArrayList<>();
+        if(mCon == null){
+            getConnection();
+        }
+        Statement stmt = mCon.createStatement();
+        String sql = "SELECT friendID FROM FRIENDS WHERE " + "userID == " + userID;
+        ResultSet res = stmt.executeQuery(sql);
+        while(res.next()) {
+            friendIDs.add(res.getInt("friendID"));
+        }
+
+        return friendIDs;
+    }
 }
