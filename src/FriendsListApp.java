@@ -25,7 +25,7 @@ public class FriendsListApp extends Application {
     private HBox mHorizontalButtonBox;
     private HBox mHorizontalTopBox;
     private VBox mMainVertBox;
-    private VBox mFriendsVBox;
+    private VBox mFriendsListVertBox;
     private Group mRoot;
     private Person mPrimarySelectedPerson, mSecondarySelectedPerson;
     private Stage mPrimaryStage;
@@ -33,6 +33,7 @@ public class FriendsListApp extends Application {
     private Boolean mPossibleFriendsShows = true;
     private TableColumn<Person, String> mFriendsListColumn;
 
+    private final String WINDOW_TITLE = "Friends Lists";
     private double mStageMinWidth = 490;
     private double mStageMaxWidth = 850;
     private final double ADD_REMOVE_BUTTTON_WIDTH = 105;
@@ -64,6 +65,7 @@ public class FriendsListApp extends Application {
         Scene scene = new Scene(mRoot);
         mPrimaryStage.setWidth(mStageMinWidth);
         mPrimaryStage.setHeight(STAGE_PREF_HEIGHT);
+        mPrimaryStage.setTitle(WINDOW_TITLE);
 
         /**
          * Tables
@@ -80,7 +82,7 @@ public class FriendsListApp extends Application {
         locationCol.setCellValueFactory(new PropertyValueFactory("location"));
         locationCol.setPrefWidth(USERS_COLUMN_PREF_WIDTH);
 
-        //made global so you can switch text and objects in list easily
+        //made field variable so you can switch text and objects in the list easily
         mFriendsListColumn = new TableColumn<>("Possible Friends");
         mFriendsListColumn.setCellValueFactory(new PropertyValueFactory("name"));
         mFriendsListColumn.setPrefWidth(FRIENDS_COLUMN_PREF_WIDTH);
@@ -140,7 +142,7 @@ public class FriendsListApp extends Application {
         });
 
         /**
-         * made buttons global so that we can easily adjust text
+         * made buttons field variables to easily adjust button text
          */
         mAddOrRemoveFriendsButton = new Button("Add Friend");
         mAddOrRemoveFriendsButton.setPrefHeight(BUTTON_PREF_HEIGHT);
@@ -177,9 +179,9 @@ public class FriendsListApp extends Application {
         mHorizontalButtonBox.setSpacing(PREF_PADDING);
         mHorizontalTopBox = new HBox();
         mHorizontalTopBox.setSpacing(PREF_PADDING);
-        mFriendsVBox = new VBox();
-        mFriendsVBox.setSpacing(PREF_PADDING);
-        mFriendsVBox.getChildren().addAll(mAddOrRemoveFriendsButton, mViewFriendsButton);
+        mFriendsListVertBox = new VBox();
+        mFriendsListVertBox.setSpacing(PREF_PADDING);
+        mFriendsListVertBox.getChildren().addAll(mAddOrRemoveFriendsButton, mViewFriendsButton);
         mHorizontalTopBox.getChildren().addAll(mUsersTable, mExtendView);
         mMainVertBox = new VBox();
         mMainVertBox.setSpacing(PREF_PADDING);
@@ -226,11 +228,11 @@ public class FriendsListApp extends Application {
         if (!isViewLargest()) {
             mPrimaryStage.setWidth(mStageMaxWidth);
             mExtendView.setText("<<");
-            mHorizontalTopBox.getChildren().addAll(mFriendsTable, mFriendsVBox);
+            mHorizontalTopBox.getChildren().addAll(mFriendsTable, mFriendsListVertBox);
         } else {
             mPrimaryStage.setWidth(mStageMinWidth);
             mExtendView.setText(">>");
-            mHorizontalTopBox.getChildren().removeAll(mFriendsTable, mFriendsVBox);
+            mHorizontalTopBox.getChildren().removeAll(mFriendsTable, mFriendsListVertBox);
         }
     }
 
@@ -248,6 +250,11 @@ public class FriendsListApp extends Application {
         saveStateOfLists();
     }
 
+    /**
+     * edits the selected entry as long as the length of the edit is greated than our string minimum length.
+     * @throws SQLException
+     * @throws ClassNotFoundException
+     */
     private void editUserClicked() throws SQLException, ClassNotFoundException {
         if (mPrimarySelectedPerson != null) {
             String firstName;
@@ -256,17 +263,17 @@ public class FriendsListApp extends Application {
             if (mFirstNameField.getText().length() < STRING_NAME_MIN_LENGTH) {
                 firstName = mPrimarySelectedPerson.getFirstName();
             } else {
-                firstName = mFirstNameField.getText();
+                firstName = mFirstNameField.getText().trim();
             }
             if( mLastNameField.getText().length() < STRING_NAME_MIN_LENGTH){
                 lastName = mPrimarySelectedPerson.getLastName();
             }else{
-                lastName = mLastNameField.getText();
+                lastName = mLastNameField.getText().trim();
             }
             if (mAddressField.getText().length() < STRING_ADDRESS_MIN_LENGTH) {
                 location = mPrimarySelectedPerson.getLocation();
             } else {
-                location = mAddressField.getText();
+                location = mAddressField.getText().trim();
             }
 
             mData.editFriend(new Person(firstName, lastName, location, mPrimarySelectedPerson.getID()), mPrimarySelectedPerson);
@@ -279,7 +286,7 @@ public class FriendsListApp extends Application {
 
     public void addUserClicked() throws SQLException, ClassNotFoundException {
         if (mFirstNameField.getText().length() > STRING_NAME_MIN_LENGTH && mAddressField.getText().length() > STRING_ADDRESS_MIN_LENGTH) {
-            Person createdPerson = new Person(mFirstNameField.getText(), mLastNameField.getText(), mAddressField.getText());
+            Person createdPerson = new Person(mFirstNameField.getText().trim(), mLastNameField.getText().trim(), mAddressField.getText().trim());
             mAddressField.clear();
             mFirstNameField.clear();
             mLastNameField.clear();
